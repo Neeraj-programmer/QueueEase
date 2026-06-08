@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Automatically switch between Local and Cloud Backend
 const API_URL = import.meta.env.PROD 
-  ? 'https://queueease-nsbe.onrender.com' 
+  ? 'https://queueease-nsbe.onrender.com/api' 
   : 'http://localhost:5000/api';
 
 const api = axios.create({
