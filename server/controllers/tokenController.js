@@ -1,5 +1,6 @@
 const Token = require('../models/Token');
 const Department = require('../models/Department');
+const Counter = require('../models/Counter');
 
 // Helper to get start and end of today
 const getTodayRange = () => {
@@ -33,23 +34,31 @@ const generateToken = async (req, res) => {
       return res.status(400).json({ message: 'You already have an active token' });
     }
 
-    const { start, end } = getTodayRange();
+    // Generate today's date in YYYY-MM-DD format
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateString = `${yyyy}-${mm}-${dd}`;
 
-    // Count today's tokens for this department to generate sequence
-    const todaysTokensCount = await Token.countDocuments({
-      departmentId,
-      queueDate: { $gte: start, $lte: end }
-    });
+    const counterKey = `token_${departmentId}_${dateString}`;
 
-    const sequence = todaysTokensCount + 1;
-    // Format: EX-S-001
-    const tokenNumber = `${department.code}-S-${sequence.toString().padStart(3, '0')}`;
+    // Atomic Counter Increment
+    const counter = await Counter.findOneAndUpdate(
+      { key: counterKey },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
+    // Format Token Number
+    const tokenNumber = `${department.code}-S-${counter.seq.toString().padStart(3, '0')}`;
 
     const token = await Token.create({
       tokenNumber,
       studentId,
       departmentId,
-      purpose
+      purpose,
+      tokenDate: dateString
     });
 
     res.status(201).json(token);
@@ -70,15 +79,25 @@ const generateVisitorToken = async (req, res) => {
       return res.status(400).json({ message: 'Invalid or inactive department' });
     }
 
-    const { start, end } = getTodayRange();
-    const todaysTokensCount = await Token.countDocuments({
-      departmentId,
-      queueDate: { $gte: start, $lte: end }
-    });
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    const dateString = `${yyyy}-${mm}-${dd}`;
 
-    const sequence = todaysTokensCount + 1;
+    // Use a different prefix for visitor tokens if you want independent counting, 
+    // or same counter key if you want them mixed. Here we use the same sequence for the department.
+    const counterKey = `token_${departmentId}_${dateString}`;
+
+    // Atomic Counter Increment
+    const counter = await Counter.findOneAndUpdate(
+      { key: counterKey },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+
     // Format: EX-V-001
-    const tokenNumber = `${department.code}-V-${sequence.toString().padStart(3, '0')}`;
+    const tokenNumber = `${department.code}-V-${counter.seq.toString().padStart(3, '0')}`;
 
     const token = await Token.create({
       tokenNumber,
@@ -89,7 +108,8 @@ const generateVisitorToken = async (req, res) => {
       visitorName,
       visitorPhone,
       studentName,
-      course
+      course,
+      tokenDate: dateString
     });
 
     res.status(201).json(token);

@@ -49,6 +49,10 @@ const tokenSchema = new mongoose.Schema({
     enum: ['Waiting', 'Called', 'Completed', 'Skipped', 'Cancelled'],
     default: 'Waiting'
   },
+  tokenDate: {
+    type: String,
+    required: true
+  },
   queueDate: {
     type: Date,
     default: Date.now
@@ -62,5 +66,7 @@ const tokenSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+tokenSchema.index({ departmentId: 1, tokenNumber: 1, tokenDate: 1 }, { unique: true });
 
 module.exports = mongoose.model('Token', tokenSchema);
