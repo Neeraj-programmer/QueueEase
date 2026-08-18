@@ -32,7 +32,7 @@ const Home = () => {
             
             <div className="flex flex-col sm:flex-row gap-4">
               <Link 
-                to="/register" 
+                to="/login" 
                 className="inline-flex justify-center items-center px-6 py-3.5 bg-primary-600 text-white font-bold rounded-xl hover:bg-primary-700 hover:shadow-lg hover:shadow-primary-600/30 transition-all active:scale-95"
               >
                 Student Login
@@ -48,7 +48,7 @@ const Home = () => {
             </div>
             
             <div className="mt-8 text-sm text-gray-500 font-medium">
-              Already have an account? <Link to="/login" className="text-primary-600 hover:underline">Sign in here</Link>
+              Don't have an account? <Link to="/register" className="text-primary-600 hover:underline">Register here</Link>
             </div>
           </div>
         </div>
